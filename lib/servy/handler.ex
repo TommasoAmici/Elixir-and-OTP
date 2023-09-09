@@ -65,10 +65,10 @@ defmodule Servy.Handler do
     content_length = conv.resp_body |> byte_size
 
     """
-    HTTP/1.1 #{Conv.full_status(conv)}
-    content-type: text/html
-    content-length: #{content_length}
-
+    HTTP/1.1 #{Conv.full_status(conv)}\r
+    content-type: text/html\r
+    content-length: #{content_length}\r
+    \r
     #{conv.resp_body}
     """
   end
