@@ -180,4 +180,22 @@ defmodule HandlerTest do
            Created a Brown bear named Baloo
            """
   end
+
+  test "GET /api/bears" do
+    request = """
+    GET /api/bears HTTP/1.1\r
+    accept: application/json\r
+    \r
+    """
+
+    response = Servy.Handler.handle(request)
+
+    assert response == """
+           HTTP/1.1 200 OK\r
+           content-type: application/json\r
+           content-length: 604\r
+           \r
+           [{"hibernating":true,"type":"Brown","name":"Teddy","id":1},{"hibernating":true,"type":"Black","name":"Smokey","id":2},{"hibernating":false,"type":"Brown","name":"Paddington","id":3},{"hibernating":true,"type":"Grizzly","name":"Scarface","id":4},{"hibernating":false,"type":"Polar","name":"Snow","id":5},{"hibernating":false,"type":"Grizzly","name":"Brutus","id":6},{"hibernating":true,"type":"Black","name":"Rosie","id":7},{"hibernating":false,"type":"Panda","name":"Roscoe","id":8},{"hibernating":true,"type":"Polar","name":"Iceman","id":9},{"hibernating":false,"type":"Grizzly","name":"Kenai","id":10}]
+           """
+  end
 end
