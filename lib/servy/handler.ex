@@ -24,11 +24,15 @@ defmodule Servy.Handler do
   end
 
   def route(conv, "GET", "/wildthings") do
-    Map.put(conv, :resp_body, "Bears, Lions, Tigers")
+    %{conv | resp_body: "Bears, Lions, Tigers"}
   end
 
   def route(conv, "GET", "/bears") do
-    Map.put(conv, :resp_body, "Teddy, Smokey, Paddington")
+    %{conv | resp_body: "Teddy, Smokey, Paddington"}
+  end
+
+  def route(conv, _method, path) do
+    %{conv | resp_body: "No #{path} here"}
   end
 
   def format_response(conv) do
@@ -57,6 +61,17 @@ IO.puts(response)
 
 request = """
 GET /bears HTTP/1.1
+Host: example.com
+User-Agent: curl/7.43.0
+Accept: */*
+
+"""
+
+response = Servy.Handler.handle(request)
+IO.puts(response)
+
+request = """
+GET /bigfoot HTTP/1.1
 Host: example.com
 User-Agent: curl/7.43.0
 Accept: */*
