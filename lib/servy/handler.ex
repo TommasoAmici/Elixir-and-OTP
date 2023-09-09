@@ -9,6 +9,14 @@ defmodule Servy.Handler do
     |> format_response
   end
 
+  def handle_file(file, conv) do
+    case file do
+      {:ok, contents} -> %{conv | status: 200, resp_body: contents}
+      {:error, :enoent} -> %{conv | status: 404, resp_body: "File not found"}
+      {:error, reason} -> %{conv | status: 500, resp_body: "File error: #{reason}"}
+    end
+  end
+
   def log(conv), do: IO.inspect(conv)
 
   def parse(request) do
@@ -31,6 +39,13 @@ defmodule Servy.Handler do
   end
 
   def rewrite_path(conv), do: conv
+
+  def route(%{method: "GET", path: "/about"} = conv) do
+    Path.expand("../../pages", __DIR__)
+    |> Path.join("about.html")
+    |> File.read()
+    |> handle_file(conv)
+  end
 
   def route(%{method: "GET", path: "/wildthings"} = conv) do
     %{conv | status: 200, resp_body: "Bears, Lions, Tigers"}
@@ -129,6 +144,17 @@ IO.puts(response)
 
 request = """
 GET /wildlife HTTP/1.1
+Host: example.com
+User-Agent: curl/7.43.0
+Accept: */*
+
+"""
+
+response = Servy.Handler.handle(request)
+IO.puts(response)
+
+request = """
+GET /about HTTP/1.1
 Host: example.com
 User-Agent: curl/7.43.0
 Accept: */*
