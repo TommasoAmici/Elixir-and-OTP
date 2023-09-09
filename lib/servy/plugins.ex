@@ -5,13 +5,22 @@ defmodule Servy.Plugins do
 
   alias Servy.Conv
 
-  def log(%Conv{} = conv), do: IO.inspect(conv)
+  def log(%Conv{} = conv) do
+    if Mix.env() == :dev do
+      IO.inspect(conv)
+    else
+      conv
+    end
+  end
 
   @doc """
   Tracks 404s.
   """
   def track(%Conv{status: 404, path: path} = conv) do
-    IO.puts("Warning: #{path} is on the loose")
+    if Mix.env() != :test do
+      IO.puts("Warning: #{path} is on the loose")
+    end
+
     conv
   end
 

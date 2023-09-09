@@ -1,8 +1,6 @@
 defmodule HandlerTest do
   use ExUnit.Case
 
-  import Servy.Handler, only: [handle: 1]
-
   test "GET /wildthings" do
     request = """
     GET /wildthings HTTP/1.1\r
