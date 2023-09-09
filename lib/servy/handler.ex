@@ -16,7 +16,12 @@ defmodule Servy.Handler do
       |> List.first()
       |> String.split(" ")
 
-    %{method: method, path: path, resp_body: "HTTP/1.1"}
+    %{
+      method: method,
+      path: path,
+      resp_body: "HTTP/1.1",
+      status: nil
+    }
   end
 
   def route(conv) do
@@ -24,27 +29,42 @@ defmodule Servy.Handler do
   end
 
   def route(conv, "GET", "/wildthings") do
-    %{conv | resp_body: "Bears, Lions, Tigers"}
+    %{conv | status: 200, resp_body: "Bears, Lions, Tigers"}
   end
 
   def route(conv, "GET", "/bears") do
-    %{conv | resp_body: "Teddy, Smokey, Paddington"}
+    %{conv | status: 200, resp_body: "Teddy, Smokey, Paddington"}
   end
 
   def route(conv, _method, path) do
-    %{conv | resp_body: "No #{path} here"}
+    %{conv | status: 404, resp_body: "No #{path} here"}
   end
 
   def format_response(conv) do
     content_length = conv.resp_body |> byte_size
 
     """
-    HTTP/1.1 200 OK
+    HTTP/1.1 #{conv.status} #{status_reason(conv.status)}
     content-type: text/html
     content-length: #{content_length}
 
     #{conv.resp_body}
     """
+  end
+
+  defp status_reason(code) do
+    case code do
+      200 -> "OK"
+      201 -> "Created"
+      202 -> "Accepted"
+      204 -> "No Content"
+      400 -> "Bad Request"
+      401 -> "Unauthorized"
+      403 -> "Forbidden"
+      404 -> "Not Found"
+      405 -> "Method Not Allowed"
+      500 -> "Internal Server Error"
+    end
   end
 end
 
