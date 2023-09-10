@@ -40,17 +40,19 @@ defmodule Servy.Handler do
     |> handle_file(conv)
   end
 
-  def route(%Conv{method: "GET", path: "/snapshots"} = conv) do
-    Servy.Fetcher.async(fn -> Servy.VideoCam.get_snapshot("cam-1") end)
-    Servy.Fetcher.async(fn -> Servy.VideoCam.get_snapshot("cam-2") end)
-    Servy.Fetcher.async(fn -> Servy.VideoCam.get_snapshot("cam-3") end)
+  def route(%Conv{method: "GET", path: "/sensors"} = conv) do
+    pid_snapshot_1 = Servy.Fetcher.async(fn -> Servy.VideoCam.get_snapshot("cam-1") end)
+    pid_snapshot_2 = Servy.Fetcher.async(fn -> Servy.VideoCam.get_snapshot("cam-2") end)
+    pid_snapshot_3 = Servy.Fetcher.async(fn -> Servy.VideoCam.get_snapshot("cam-3") end)
+    pid_where_is_bigfoot = Servy.Fetcher.async(fn -> Servy.Tracker.get_location("bigfoot") end)
 
-    snapshot_1 = Servy.Fetcher.get_result()
-    snapshot_2 = Servy.Fetcher.get_result()
-    snapshot_3 = Servy.Fetcher.get_result()
+    snapshot_1 = Servy.Fetcher.get_result(pid_snapshot_1)
+    snapshot_2 = Servy.Fetcher.get_result(pid_snapshot_2)
+    snapshot_3 = Servy.Fetcher.get_result(pid_snapshot_3)
+    where_is_bigfoot = Servy.Fetcher.get_result(pid_where_is_bigfoot)
 
     snapshots = [snapshot_1, snapshot_2, snapshot_3]
-    %{conv | status: 200, resp_body: inspect(snapshots)}
+    %{conv | status: 200, resp_body: inspect({snapshots, where_is_bigfoot})}
   end
 
   def route(%Conv{method: "GET", path: "/kaboom"} = _conv) do
