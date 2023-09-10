@@ -7,8 +7,9 @@ defmodule Servy.PledgeServer do
     defstruct cache_size: 3, pledges: []
   end
 
-  def init(init_arg) do
-    {:ok, init_arg}
+  def init(state) do
+    pledges = fetch_recent_pledges_from_service()
+    {:ok, %{state | pledges: pledges}}
   end
 
   def start() do
@@ -41,6 +42,10 @@ defmodule Servy.PledgeServer do
 
   defp send_pledge_to_service(_name, _amount) do
     {:ok, "pledge-#{:rand.uniform(1000)}"}
+  end
+
+  defp fetch_recent_pledges_from_service do
+    [{"wilma", 100}, {"fred", 50}]
   end
 
   def create_pledge(name, amount) do
