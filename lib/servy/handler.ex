@@ -40,6 +40,19 @@ defmodule Servy.Handler do
     |> handle_file(conv)
   end
 
+  def route(%Conv{method: "GET", path: "/snapshots"} = conv) do
+    Servy.Fetcher.async("cam-1")
+    Servy.Fetcher.async("cam-2")
+    Servy.Fetcher.async("cam-3")
+
+    snapshot_1 = Servy.Fetcher.get_result()
+    snapshot_2 = Servy.Fetcher.get_result()
+    snapshot_3 = Servy.Fetcher.get_result()
+
+    snapshots = [snapshot_1, snapshot_2, snapshot_3]
+    %{conv | status: 200, resp_body: inspect(snapshots)}
+  end
+
   def route(%Conv{method: "GET", path: "/kaboom"} = _conv) do
     raise "Kaboom!"
   end
