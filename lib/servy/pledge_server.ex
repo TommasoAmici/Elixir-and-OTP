@@ -10,25 +10,30 @@ defmodule Servy.PledgeServer do
 
   def listen_loop(state) do
     receive do
-      {sender, {:create_pledge, name, amount}} ->
-        {:ok, id} = send_pledge_to_service(name, amount)
-        new_state = [{name, amount} | state |> Enum.take(2)]
-        send(sender, {:response, id})
+      {sender, message} when is_pid(sender) ->
+        {response, new_state} = handle_call(message, state)
+        send(sender, {:response, response})
         listen_loop(new_state)
-
-      {sender, :recent_pledges} ->
-        send(sender, {:response, state})
-        listen_loop(state)
-
-      {sender, :total_pledged} ->
-        total = state |> Enum.map(&elem(&1, 1)) |> Enum.sum()
-        send(sender, {:response, total})
-        listen_loop(state)
 
       unexpected ->
         IO.puts("Unpexected message #{inspect(unexpected)}")
         listen_loop(state)
     end
+  end
+
+  def handle_call(:total_pledged, state) do
+    total = state |> Enum.map(&elem(&1, 1)) |> Enum.sum()
+    {total, state}
+  end
+
+  def handle_call(:recent_pledges, state) do
+    {state, state}
+  end
+
+  def handle_call({:create_pledge, name, amount}, state) do
+    {:ok, id} = send_pledge_to_service(name, amount)
+    new_state = [{name, amount} | state |> Enum.take(2)]
+    {id, new_state}
   end
 
   defp send_pledge_to_service(_name, _amount) do
