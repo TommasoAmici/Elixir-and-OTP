@@ -16,4 +16,7 @@ Servy.PledgeServer.total_pledged() |> IO.inspect()
 
 send(pid, {:stop, "hammertime"})
 
+Servy.SensorServer.start()
+Servy.SensorServer.get_sensor_data() |> IO.inspect()
+
 Servy.HttpServer.start(4000)
