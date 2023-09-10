@@ -1,27 +1,24 @@
-defmodule Servy.PledgeServer do
-  @name :pledge_server
-
-  def start do
-    IO.puts("Starting pledge server...")
-    pid = spawn(__MODULE__, :listen_loop, [[]])
-    Process.register(pid, @name)
+defmodule Servy.GenericServer do
+  def start(callback_module, initial_state, name) do
+    pid = spawn(__MODULE__, :listen_loop, [callback_module, initial_state])
+    Process.register(pid, name)
     pid
   end
 
-  def listen_loop(state) do
+  def listen_loop(callback_module, state) do
     receive do
       {:call, sender, message} when is_pid(sender) ->
-        {response, new_state} = handle_call(message, state)
+        {response, new_state} = callback_module.handle_call(message, state)
         send(sender, {:response, response})
-        listen_loop(new_state)
+        listen_loop(callback_module, new_state)
 
       {:cast, message} ->
-        new_state = handle_cast(message, state)
-        listen_loop(new_state)
+        new_state = callback_module.handle_cast(message, state)
+        listen_loop(callback_module, new_state)
 
       unexpected ->
         IO.puts("Unpexected message #{inspect(unexpected)}")
-        listen_loop(state)
+        listen_loop(callback_module, state)
     end
   end
 
@@ -36,6 +33,15 @@ defmodule Servy.PledgeServer do
 
   def cast(pid, message) do
     send(pid, {:cast, message})
+  end
+end
+
+defmodule Servy.PledgeServer do
+  @name :pledge_server
+
+  def start() do
+    IO.puts("Starting pledge server...")
+    Servy.GenericServer.start(__MODULE__, [], @name)
   end
 
   def handle_cast(:clear, _state) do
@@ -62,18 +68,18 @@ defmodule Servy.PledgeServer do
   end
 
   def create_pledge(name, amount) do
-    call(@name, {:create_pledge, name, amount})
+    Servy.GenericServer.call(@name, {:create_pledge, name, amount})
   end
 
   def recent_pledges() do
-    call(@name, :recent_pledges)
+    Servy.GenericServer.call(@name, :recent_pledges)
   end
 
   def total_pledged() do
-    call(@name, :total_pledged)
+    Servy.GenericServer.call(@name, :total_pledged)
   end
 
   def clear() do
-    cast(@name, :clear)
+    Servy.GenericServer.cast(@name, :clear)
   end
 end
