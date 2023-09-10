@@ -12,9 +12,9 @@ defmodule Servy.PledgeServer do
     {:ok, %{state | pledges: pledges}}
   end
 
-  def start() do
+  def start_link(_args) do
     IO.puts("Starting pledge server...")
-    GenServer.start(__MODULE__, %State{}, name: @name)
+    GenServer.start_link(__MODULE__, %State{}, name: @name)
   end
 
   def handle_cast(:clear, state) do
