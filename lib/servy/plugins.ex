@@ -7,10 +7,10 @@ defmodule Servy.Plugins do
 
   def log(%Conv{} = conv) do
     if Mix.env() == :dev do
-      IO.inspect(conv)
-    else
-      conv
+      IO.puts("#{conv.method} #{conv.path}")
     end
+
+    conv
   end
 
   @doc """
