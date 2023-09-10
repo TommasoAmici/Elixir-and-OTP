@@ -1,66 +1,34 @@
-defmodule Servy.GenericServer do
-  def start(callback_module, initial_state, name) do
-    pid = spawn(__MODULE__, :listen_loop, [callback_module, initial_state])
-    Process.register(pid, name)
-    pid
-  end
-
-  def listen_loop(callback_module, state) do
-    receive do
-      {:call, sender, message} when is_pid(sender) ->
-        {response, new_state} = callback_module.handle_call(message, state)
-        send(sender, {:response, response})
-        listen_loop(callback_module, new_state)
-
-      {:cast, message} ->
-        new_state = callback_module.handle_cast(message, state)
-        listen_loop(callback_module, new_state)
-
-      unexpected ->
-        IO.puts("Unpexected message #{inspect(unexpected)}")
-        listen_loop(callback_module, state)
-    end
-  end
-
-  def call(pid, message) do
-    send(pid, {:call, self(), message})
-
-    receive do
-      {:response, response} ->
-        response
-    end
-  end
-
-  def cast(pid, message) do
-    send(pid, {:cast, message})
-  end
-end
-
 defmodule Servy.PledgeServer do
   @name :pledge_server
 
+  use GenServer
+
+  def init(init_arg) do
+    {:ok, init_arg}
+  end
+
   def start() do
     IO.puts("Starting pledge server...")
-    Servy.GenericServer.start(__MODULE__, [], @name)
+    GenServer.start(__MODULE__, [], name: @name)
   end
 
   def handle_cast(:clear, _state) do
-    []
+    {:noreply, []}
   end
 
-  def handle_call(:total_pledged, state) do
+  def handle_call(:total_pledged, _from, state) do
     total = state |> Enum.map(&elem(&1, 1)) |> Enum.sum()
-    {total, state}
+    {:reply, total, state}
   end
 
-  def handle_call(:recent_pledges, state) do
-    {state, state}
+  def handle_call(:recent_pledges, _from, state) do
+    {:reply, state, state}
   end
 
-  def handle_call({:create_pledge, name, amount}, state) do
+  def handle_call({:create_pledge, name, amount}, _from, state) do
     {:ok, id} = send_pledge_to_service(name, amount)
     new_state = [{name, amount} | state |> Enum.take(2)]
-    {id, new_state}
+    {:reply, id, new_state}
   end
 
   defp send_pledge_to_service(_name, _amount) do
@@ -68,18 +36,18 @@ defmodule Servy.PledgeServer do
   end
 
   def create_pledge(name, amount) do
-    Servy.GenericServer.call(@name, {:create_pledge, name, amount})
+    GenServer.call(@name, {:create_pledge, name, amount})
   end
 
   def recent_pledges() do
-    Servy.GenericServer.call(@name, :recent_pledges)
+    GenServer.call(@name, :recent_pledges)
   end
 
   def total_pledged() do
-    Servy.GenericServer.call(@name, :total_pledged)
+    GenServer.call(@name, :total_pledged)
   end
 
   def clear() do
-    Servy.GenericServer.cast(@name, :clear)
+    GenServer.cast(@name, :clear)
   end
 end

@@ -1,4 +1,4 @@
-pid = Servy.PledgeServer.start()
+{:ok, pid} = Servy.PledgeServer.start()
 
 Servy.PledgeServer.create_pledge( "John", 100) |> IO.inspect()
 Servy.PledgeServer.create_pledge( "Al", 200) |> IO.inspect()
